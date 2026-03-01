@@ -17,6 +17,12 @@ public class Enemy : MonoBehaviour
     private int direction = 1;
     private Transform playerTarget;
     private bool chasingPlayer = false;
+    HidingSystem playerHiding;
+
+    private void Start()
+    {
+        playerHiding = playerTarget.GetComponent<HidingSystem>();
+    }
 
     void Update()
     {
@@ -24,6 +30,7 @@ public class Enemy : MonoBehaviour
             ChasePlayer();
         else
             Patrol();
+
     }
 
     // ---------- PATRULLA ----------
@@ -37,7 +44,12 @@ public class Enemy : MonoBehaviour
             patrolSpeed * Time.deltaTime
         );
 
-        if (Vector2.Distance(transform.position, waypoints[currentWaypoint].position) < 0.05f)
+        if (playerHiding != null && playerHiding.IsHiding)
+        {
+            return;
+        }
+
+            if (Vector2.Distance(transform.position, waypoints[currentWaypoint].position) < 0.05f)
         {
             if (currentWaypoint == waypoints.Count - 1)
                 direction = -1;

@@ -19,7 +19,6 @@ public class SceneTransition : MonoBehaviour
 #endif
 
     [SerializeField] private string nombreEscena;
-
     private bool isTransitioning = false;
 
     private void Awake()

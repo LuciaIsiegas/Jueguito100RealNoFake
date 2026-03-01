@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -9,12 +10,14 @@ public class Player : MonoBehaviour
     private SpriteRenderer spriteRenderer;
 
     private Vector2 movement;
+    private HidingSystem hidingSystem;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        hidingSystem = GetComponentInChildren<HidingSystem>();
     }
 
     void Update()
@@ -50,6 +53,11 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (hidingSystem.IsHiding)
+        {
+            rb.velocity = Vector2.zero;
+            return;
+        }
         rb.MovePosition(rb.position + movement.normalized * speed * Time.fixedDeltaTime);
     }
 }
