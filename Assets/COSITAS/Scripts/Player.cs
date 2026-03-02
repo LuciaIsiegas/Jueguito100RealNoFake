@@ -10,21 +10,35 @@ public class Player : MonoBehaviour
     private SpriteRenderer spriteRenderer;
 
     private Vector2 movement;
-    private HidingSystem hidingSystem;
+    [SerializeField] HidingSystem hidingSystem;
+    private bool isHiding = false;
+
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponentInChildren<Animator>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        hidingSystem = GetComponentInChildren<HidingSystem>();
     }
 
     void Update()
     {
+        InputPlayer();
+        isHiding = hidingSystem.IsHiding;
+        if (!isHiding)
+        {
+            Move();
+        }
+    }
+
+    void InputPlayer()
+    {
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.y = Input.GetAxisRaw("Vertical");
+    }
 
+    private void Move()
+    {
         bool isMoving = movement != Vector2.zero;
         animator.SetBool("IsMoving", isMoving);
 
@@ -53,7 +67,7 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (hidingSystem.IsHiding)
+        if (isHiding)
         {
             rb.velocity = Vector2.zero;
             return;

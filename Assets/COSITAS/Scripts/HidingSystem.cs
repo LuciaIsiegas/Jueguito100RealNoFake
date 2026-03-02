@@ -38,10 +38,7 @@ public class HidingSystem : MonoBehaviour
                 StartHiding();
             }
         }
-
-
-        // Salir del escondite manualmente presionando E
-        if (isHiding && Input.GetKeyDown(hideKey))
+        else if (isHiding && Input.GetKeyDown(hideKey))
         {
             StopHiding();
         }

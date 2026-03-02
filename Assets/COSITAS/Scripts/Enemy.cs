@@ -9,6 +9,8 @@ public class Enemy : MonoBehaviour
     [Header("Velocidades")]
     public float patrolSpeed = 2f;
     public float chaseSpeed = 3.5f;
+    private float lostPlayerTimer = 0f;
+    public float lostPlayerDelay = 3f;
 
     [Header("Detección")]
     public string playerTag = "Player";
@@ -18,22 +20,38 @@ public class Enemy : MonoBehaviour
     private Transform playerTarget;
     private bool chasingPlayer = false;
     HidingSystem playerHiding;
+    HealthUI healthUI;
 
     private void Start()
     {
-        playerHiding = playerTarget.GetComponent<HidingSystem>();
+        healthUI = FindObjectOfType<HealthUI>();
     }
 
     void Update()
     {
+        if (playerHiding != null && playerHiding.IsHiding)
+        {
+            chasingPlayer = false;
+            lostPlayerTimer += Time.deltaTime;
+
+            if (lostPlayerTimer >= lostPlayerDelay)
+            {
+                lostPlayerTimer = 0f;
+                currentWaypoint = GetClosestWaypointIndex();
+                UpdateDirection();
+                Patrol();
+            }
+            return;
+        }
+
+        lostPlayerTimer = 0f;  // resetea el timer si el player no está escondido
+
         if (chasingPlayer && playerTarget != null)
             ChasePlayer();
         else
             Patrol();
-
     }
 
-    // ---------- PATRULLA ----------
     void Patrol()
     {
         if (waypoints.Count < 2) return;
@@ -80,7 +98,11 @@ public class Enemy : MonoBehaviour
         if (other.CompareTag(playerTag))
         {
             playerTarget = other.transform;
-            chasingPlayer = true;
+            playerHiding = playerTarget.GetComponentInChildren<HidingSystem>();
+
+            // Solo perseguir si no está escondido
+            if (playerHiding == null || !playerHiding.IsHiding)
+                chasingPlayer = true;
         }
     }
 
@@ -95,6 +117,21 @@ public class Enemy : MonoBehaviour
             currentWaypoint = GetClosestWaypointIndex();
             UpdateDirection();
         }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag(playerTag))
+        {
+            // No hacer daño si está escondido
+            if (playerHiding != null && playerHiding.IsHiding) return;
+            healthUI.TakeDamage(1);
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        
     }
 
     // ---------- WAYPOINT MÁS CERCANO ----------
@@ -128,9 +165,12 @@ public class Enemy : MonoBehaviour
     // ---------- GIRO DEL SPRITE ----------
     void FlipSprite(Vector3 target)
     {
+        Vector3 scale = transform.localScale;
+        float absX = Mathf.Abs(scale.x); // guarda el valor original sin el signo
+
         if (target.x > transform.position.x)
-            transform.localScale = new Vector3(1, 1, 1);
+            transform.localScale = new Vector3(absX, scale.y, scale.z);
         else
-            transform.localScale = new Vector3(-1, 1, 1);
+            transform.localScale = new Vector3(-absX, scale.y, scale.z);
     }
 }
