@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -21,6 +23,11 @@ public class SceneTransition : MonoBehaviour
     [SerializeField] private string nombreEscena;
     private bool isTransitioning = false;
 
+    [Header("Lore Panel")]
+    [SerializeField] private GameObject lorePanel;
+    [SerializeField] private TMP_Text[] lorePages;  // arrastra los 9 TMP en orden en el Inspector
+    [SerializeField] private float typewriterSpeed = 0.03f;
+
     private void Awake()
     {
         // Asegura que el panel empiece negro
@@ -35,6 +42,10 @@ public class SceneTransition : MonoBehaviour
     private void Start()
     {
         StartCoroutine(FadeIn());
+
+        // Desactiva todos los TMP al inicio
+        foreach (TMP_Text page in lorePages)
+            page.gameObject.SetActive(false);
     }
 
 #if UNITY_EDITOR
@@ -51,7 +62,7 @@ public class SceneTransition : MonoBehaviour
     {
         if (!isTransitioning)
         {
-            StartCoroutine(FadeOutAndLoad());
+            StartCoroutine(ShowLoreThenTransition());  // ? cambia FadeOutAndLoad por esto
         }
     }
 
@@ -91,6 +102,50 @@ public class SceneTransition : MonoBehaviour
             yield return null;
         }
 
+        SceneManager.LoadScene(nombreEscena);
+    }
+
+    private IEnumerator ShowLoreThenTransition()
+    {
+        isTransitioning = true;
+
+        // Primero fade a negro
+        fadeImage.raycastTarget = true;
+        float tiempo = 0f;
+        while (tiempo < fadeDuration)
+        {
+            tiempo += Time.deltaTime;
+            float alpha = Mathf.Clamp01(tiempo / fadeDuration);
+            Color c = fadeImage.color;
+            fadeImage.color = new Color(c.r, c.g, c.b, alpha);
+            yield return null;
+        }
+
+        // Ahora muestra el lore sobre el fondo negro
+        lorePanel.SetActive(true);
+
+        foreach (TMP_Text page in lorePages)
+            page.gameObject.SetActive(false);
+
+        foreach (TMP_Text page in lorePages)
+        {
+            string fullText = page.text;
+            page.text = "";
+            page.gameObject.SetActive(true);
+
+            foreach (char letra in fullText)
+            {
+                page.text += letra;
+                yield return new WaitForSeconds(typewriterSpeed);
+            }
+
+            yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0));
+            page.gameObject.SetActive(false);
+        }
+
+        lorePanel.SetActive(false);
+
+        // Carga la escena (el fondo ya es negro así que el fade es instantáneo)
         SceneManager.LoadScene(nombreEscena);
     }
 }
