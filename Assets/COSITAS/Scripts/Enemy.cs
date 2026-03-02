@@ -29,6 +29,7 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
+        // Si el jugador está escondido, ignorarlo completamente
         if (playerHiding != null && playerHiding.IsHiding)
         {
             chasingPlayer = false;
@@ -39,13 +40,15 @@ public class Enemy : MonoBehaviour
                 lostPlayerTimer = 0f;
                 currentWaypoint = GetClosestWaypointIndex();
                 UpdateDirection();
-                Patrol();
             }
+
+            Patrol();
             return;
         }
 
-        lostPlayerTimer = 0f;  // resetea el timer si el player no está escondido
+        lostPlayerTimer = 0f;
 
+        // Si está dentro del trigger Y no escondido, perseguir
         if (chasingPlayer && playerTarget != null)
             ChasePlayer();
         else
@@ -62,19 +65,20 @@ public class Enemy : MonoBehaviour
             patrolSpeed * Time.deltaTime
         );
 
-        if (playerHiding != null && playerHiding.IsHiding)
+        if (Vector2.Distance(transform.position, waypoints[currentWaypoint].position) < 0.05f)
         {
-            return;
-        }
-
-            if (Vector2.Distance(transform.position, waypoints[currentWaypoint].position) < 0.05f)
-        {
-            if (currentWaypoint == waypoints.Count - 1)
-                direction = -1;
-            else if (currentWaypoint == 0)
-                direction = 1;
-
             currentWaypoint += direction;
+
+            if (currentWaypoint >= waypoints.Count - 1)
+            {
+                currentWaypoint = waypoints.Count - 1;
+                direction = -1;
+            }
+            else if (currentWaypoint <= 0)
+            {
+                currentWaypoint = 0;
+                direction = 1;
+            }
         }
 
         FlipSprite(waypoints[currentWaypoint].position);
@@ -111,9 +115,8 @@ public class Enemy : MonoBehaviour
         if (other.CompareTag(playerTag))
         {
             playerTarget = null;
+            playerHiding = null;
             chasingPlayer = false;
-
-            // 🔥 volver al waypoint más cercano
             currentWaypoint = GetClosestWaypointIndex();
             UpdateDirection();
         }
@@ -172,5 +175,15 @@ public class Enemy : MonoBehaviour
             transform.localScale = new Vector3(absX, scale.y, scale.z);
         else
             transform.localScale = new Vector3(-absX, scale.y, scale.z);
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (other.CompareTag(playerTag))
+        {
+            // Si el jugador sigue dentro del trigger y deja de esconderse, volver a perseguir
+            if (playerHiding == null || !playerHiding.IsHiding)
+                chasingPlayer = true;
+        }
     }
 }

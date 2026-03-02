@@ -25,7 +25,7 @@ public class SceneTransition : MonoBehaviour
 
     [Header("Lore Panel")]
     [SerializeField] private GameObject lorePanel;
-    [SerializeField] private TMP_Text[] lorePages;  // arrastra los 9 TMP en orden en el Inspector
+    [SerializeField] private TMP_Text[] lorePages;
     [SerializeField] private float typewriterSpeed = 0.03f;
 
     private void Awake()
@@ -62,7 +62,7 @@ public class SceneTransition : MonoBehaviour
     {
         if (!isTransitioning)
         {
-            StartCoroutine(ShowLoreThenTransition());  // ? cambia FadeOutAndLoad por esto
+            StartCoroutine(ShowLoreThenTransition());
         }
     }
 
@@ -109,7 +109,6 @@ public class SceneTransition : MonoBehaviour
     {
         isTransitioning = true;
 
-        // Primero fade a negro
         fadeImage.raycastTarget = true;
         float tiempo = 0f;
         while (tiempo < fadeDuration)
@@ -121,7 +120,6 @@ public class SceneTransition : MonoBehaviour
             yield return null;
         }
 
-        // Ahora muestra el lore sobre el fondo negro
         lorePanel.SetActive(true);
 
         foreach (TMP_Text page in lorePages)
@@ -144,8 +142,17 @@ public class SceneTransition : MonoBehaviour
         }
 
         lorePanel.SetActive(false);
+        fadeImage.raycastTarget = true;
+        float t = 0f;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            float alpha = Mathf.Clamp01(t / fadeDuration);
+            Color c = fadeImage.color;
+            fadeImage.color = new Color(c.r, c.g, c.b, alpha);
+            yield return null;
+        }
 
-        // Carga la escena (el fondo ya es negro así que el fade es instantáneo)
         SceneManager.LoadScene(nombreEscena);
     }
 }

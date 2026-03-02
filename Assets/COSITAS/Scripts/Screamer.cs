@@ -4,14 +4,19 @@ using UnityEngine;
 
 public class Screamer : MonoBehaviour
 {
-    public GameObject screaamerPanel;  // Panel con la imagen animada
+    public GameObject screamerPanel;
     public float duration = 1.5f;
     public bool isShowing = false;
+
+    [Header("Audio")]
+    [SerializeField] private AudioSource musicaFondo;
+    [SerializeField] private AudioSource screaamerSound;
+    [SerializeField] private AudioClip screaamerClip;
 
     void Start()
     {
         if (isShowing) return;
-        screaamerPanel.SetActive(false);
+        screamerPanel.SetActive(false);
     }
 
     public void ShowScreamer()
@@ -22,14 +27,24 @@ public class Screamer : MonoBehaviour
     IEnumerator ScreamerRoutine()
     {
         isShowing = true;
-        screaamerPanel.SetActive(true);
-        Time.timeScale = 0f;  // ? pausa el juego
+        screamerPanel.SetActive(true);
+        Time.timeScale = 0f;
 
-        // WaitForSecondsRealtime porque timeScale es 0
+        // Para la música y reproduce el screamer
+        if (musicaFondo != null) musicaFondo.Pause();
+        if (screaamerSound != null && screaamerClip != null)
+        {
+            screaamerSound.PlayOneShot(screaamerClip);
+        }
+
         yield return new WaitForSecondsRealtime(duration);
 
-        screaamerPanel.SetActive(false);
-        Time.timeScale = 1f;  // ? reanuda
+        screamerPanel.SetActive(false);
+        Time.timeScale = 1f;
+
+        // Reanuda la música
+        if (musicaFondo != null) musicaFondo.UnPause();
+
         isShowing = false;
     }
 }

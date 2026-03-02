@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class HealthUI : MonoBehaviour
 {
-    public Image[] hearts;           // Arrastra las imágenes en el Inspector
+    public Image[] hearts;
     public Sprite fullHeart;
     public int maxHealth = 3;
     private int currentHealth;
@@ -21,7 +21,7 @@ public class HealthUI : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        if (screamerUI.isShowing) return;  // ? no recibir daño mientras el screamer está activo
+        if (screamerUI.isShowing) return;
 
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
